@@ -144,6 +144,7 @@ function btnImgFolder_Callback(hObject, eventdata, handles)
     %     set(handles.txtFolder, 'string', handles.imageFolder);
         appendText(handles.txtInfo, ['Image Folder: ', handles.imageFolder]);
         guidata(hObject, handles);
+        UpdateAnalyzeButtonCaption(handles);
         % Save the image folder in our ini file.
         SaveUserSettings(handles);
     end
@@ -187,6 +188,7 @@ function btnROIFolder_Callback(hObject, eventdata, handles)
     if returnValue ~= 0
         % Assign the value if they didn't click cancel.
         handles.roiFolder = returnValue;
+        handles = LoadROIs(handles);
         appendText(handles.txtInfo, ['ROIs Folder: ', handles.roiFolder]);
         guidata(hObject, handles);
         % Save the image folder in our ini file.
@@ -407,12 +409,12 @@ function SaveUserSettings(handles)
     guiSettings.chkSaveSegmentation = get(handles.chkSaveSegmentation, 'Value');
     guiSettings.chkSaveSummary = get(handles.chkSaveSummary, 'Value');
 
-    save(fullfile(cd, [mfilename, '.mat']), 'lastUsedImageFolder', 'lastUsedROIFolder', 'lastUsedSegmentationFolder', 'guiSettings');
+    save([mfilename('fullpath'), '.mat'], 'lastUsedImageFolder', 'lastUsedROIFolder', 'lastUsedSegmentationFolder', 'guiSettings');
 end
 
 function handles = LoadUserSettings(handles)
-    if exist(fullfile(cd, [mfilename, '.mat']), 'file')
-        initialValues = load(fullfile(cd, [mfilename, '.mat']));
+    if exist([mfilename('fullpath'), '.mat'], 'file')
+        initialValues = load([mfilename('fullpath'), '.mat']);
         
         handles.imageFolder = initialValues.lastUsedImageFolder;
         handles.roiFolder = initialValues.lastUsedROIFolder;
@@ -431,16 +433,18 @@ function handles = LoadImageList(handles)
     set(handles.lstImageList, 'string', {imageFiles.name});
     set(handles.lstImageList, 'value', []);
 
+%     guidata(handles.lstImageList, handles);
+end
+
+function handles = LoadROIs(handles)
     handles.roiSub = dir(handles.roiFolder);
     handles.roiSub(1: 2) = [];
     handles.roiSub(~[handles.roiSub.isdir]) = [];
 
-    handles.roiFiles = cell(length(handles.roiSub), 1);
-    for s = 1: length(handles.roiSub)
-        handles.roiFiles{s} = dir(fullfile(handles.roiFolder, handles.roiSub(s).name, '*.tif'));
-    end
-
-    guidata(handles.lstImageList, handles);
+%     handles.roiFiles = cell(length(handles.roiSub), 1);
+%     for s = 1: length(handles.roiSub)
+%         handles.roiFiles{s} = dir(fullfile(handles.roiFolder, handles.roiSub(s).name, '*.tif'));
+%     end
 end
 
 function imageWithBoundary = PutBoundaryOnImage(image, boundaryImageOrPoints, color, boundaryThickness)
